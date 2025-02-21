@@ -15,5 +15,5 @@ To compile the program, run the following command:
 ```bash
 gcc main.c -o calc.exe
 ```
-Sourses
+## Sourses
 DeepSeek and Gpt 4o
