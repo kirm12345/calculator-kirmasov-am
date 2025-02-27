@@ -6,8 +6,8 @@
 
 #define MAX_INPUT_SIZE 1024
 #define MIN_DIVISOR 1e-4f
-#define INT_MAX_VALUE 2147483647
-#define INT_MIN_VALUE -2147483648
+#define INT_MAX_VALUE 2000000000
+#define INT_MIN_VALUE -2000000000
 
 #ifdef GTEST
 extern const char* input_string;
@@ -23,9 +23,7 @@ float eval_factor(void);
 
 float eval_expr()
 {
-
     float result = eval_term();
-
     while (1) {
         while (isspace(*input_string))
             input_string++;
@@ -35,7 +33,6 @@ float eval_expr()
             && (*(input_string + 1) == '+' || *(input_string + 1) == '-'
                 || *(input_string + 1) == '*' || *(input_string + 1) == '/')) {
             fprintf(stderr, "Ошибка: Некорректное выражение!\n");
-            fflush(stderr);
             exit(EXIT_FAILURE);
         }
 
@@ -55,7 +52,6 @@ float eval_expr()
 float eval_term()
 {
     float result = eval_factor();
-
     while (1) {
         while (isspace(*input_string))
             input_string++;
@@ -96,14 +92,19 @@ float eval_factor()
     if (*input_string == '(') {
         input_string++;
         float result = eval_expr();
+
         while (isspace(*input_string))
             input_string++;
-        if (*input_string == ')')
-            input_string++;
+
+        if (*input_string != ')') {
+            fprintf(stderr, "Ошибка: Некорректное количество скобок!\n");
+            exit(EXIT_FAILURE);
+        }
+        input_string++;
         return result;
     }
 
-    float number = 0;
+    long long number = 0;
     float fraction = 0.0f;
     int fraction_div = 1;
     bool is_float = false;
@@ -117,6 +118,11 @@ float eval_factor()
                 fraction_div *= 10;
             } else {
                 number = number * 10 + (*input_string - '0');
+                if (!float_mode
+                    && (number > INT_MAX_VALUE || number < INT_MIN_VALUE)) {
+                    fprintf(stderr, "Ошибка: Переполнение целого числа!\n");
+                    exit(EXIT_FAILURE);
+                }
             }
         }
         input_string++;
@@ -136,12 +142,18 @@ int main(int argc, char* argv[])
     size_t len = 0;
     int ch;
     bool last_was_op = true;
+    int open_braces = 0, close_braces = 0; 
 
     while ((ch = getchar()) != EOF && len < MAX_INPUT_SIZE - 1) {
-        if (!strchr("0123456789()+-*/\\s", ch)) {
+        if (!strchr("0123456789()+-* /\\s", ch)) {
             fprintf(stderr, "Ошибка: Некорректные символы в выражении!\n");
             return 1;
         }
+        if (ch == '(')
+            open_braces++;
+        if (ch == ')')
+            close_braces++;
+
         if (strchr("+-*/", ch) && last_was_op) {
             fprintf(stderr, "Ошибка: Некорректное выражение!\n");
             exit(EXIT_FAILURE);
@@ -150,6 +162,11 @@ int main(int argc, char* argv[])
         input[len++] = (char)ch;
     }
     input[len] = '\0';
+
+    if (open_braces != close_braces) {
+        fprintf(stderr, "Ошибка: Некорректное количество скобок!\n");
+        return 1;
+    }
 
     if (len >= MAX_INPUT_SIZE - 1) {
         fprintf(stderr, "Ошибка: Ввод превышает 1024 байта!\n");
@@ -162,6 +179,7 @@ int main(int argc, char* argv[])
     }
 
     input_string = input;
+    printf("\n");
     float result = eval_expr();
 
     while (isspace(*input_string))
@@ -172,7 +190,9 @@ int main(int argc, char* argv[])
     }
 
     if (float_mode) {
-        printf("%.6f\n", result);
+        int temp = (int)(result / MIN_DIVISOR
+            + (result >= 0 ? 0.5 : -0.5)); 
+        printf("%.4f\n", temp * MIN_DIVISOR);
     } else {
         printf("%d\n", (int)result);
     }

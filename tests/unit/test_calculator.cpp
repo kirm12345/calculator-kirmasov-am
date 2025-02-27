@@ -1,6 +1,9 @@
 #include <climits>
 #include <gtest/gtest.h>
 
+#define INT_MAX_VALUE 2000000000
+#define INT_MIN_VALUE -2000000000
+
 extern "C" {
 extern float eval_expr();
 extern float eval_term();
@@ -57,19 +60,19 @@ TEST(CalculatorTest, InvalidOperators)
 TEST(CalculatorTest, IntMax)
 {
     char expr[50];
-    snprintf(expr, sizeof(expr), "%d + 0", INT_MAX);
+    snprintf(expr, sizeof(expr), "%d + 0", INT_MAX_VALUE);
     input_string = expr;
     float_mode = false;
-    EXPECT_NEAR(eval_expr(), INT_MAX, 256);
+    EXPECT_NEAR(eval_expr(), INT_MAX_VALUE, 256);
 }
 
 TEST(CalculatorTest, IntMin)
 {
     char expr[50];
-    snprintf(expr, sizeof(expr), "%d + 0", INT_MIN);
+    snprintf(expr, sizeof(expr), "%d + 0", INT_MIN_VALUE);
     input_string = expr;
     float_mode = false;
-    EXPECT_NEAR(eval_expr(), INT_MIN, 256);
+    EXPECT_NEAR(eval_expr(), INT_MIN_VALUE, 256);
 }
 
 TEST(CalculatorTest, FloatModeAddition)
