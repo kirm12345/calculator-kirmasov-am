@@ -77,3 +77,6 @@ venv:
 
 run-integration-tests: $(BUILD_DIR)/app.exe
 	pytest tests/integration/
+
+run-server:
+	python3 serv.py
