@@ -3,3 +3,6 @@
 googletest/
 build/
 __pycache__/
+*.log
+*.gigaide
+*.idea

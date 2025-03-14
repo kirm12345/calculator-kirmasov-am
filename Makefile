@@ -73,10 +73,14 @@ $(TEST_BUILD_DIR)/gtest_main.a: $(TEST_BUILD_DIR)/gtest-all.o $(TEST_BUILD_DIR)/
 	$(AR) $(ARFLAGS) $@ $^
 
 venv:
-	python3 -m venv venv && source venv/bin/activate && pip install pytest
+	python3 -m venv venv
+	source venv/bin/activate && pip install pytest structlog
 
 run-integration-tests: $(BUILD_DIR)/app.exe
 	pytest tests/integration/
 
 run-server:
 	python3 serv.py
+
+install-python-deps:
+	pip install structlog
