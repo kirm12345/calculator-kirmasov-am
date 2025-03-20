@@ -28,20 +28,18 @@ calc_path = Path(__file__).parent / "src" / "calc.exe"
 class CalculatorHandler(BaseHTTPRequestHandler):
     def do_POST(self):
         try:
-            parsed_url = urlparse(self.path)
-            query_params = parse_qs(parsed_url.query)
-
-            use_float = query_params.get("float", ["0"])[0] == "1"
-
             content_length = int(self.headers["Content-Length"])
             body = self.rfile.read(content_length).decode("utf-8")
 
             try:
-                expression = json.loads(body)
+                data = json.loads(body)
+                expression = data.get("expression")
+                use_float = data.get("float_mode", False)  # Получаем флаг float-режима
+
                 if not isinstance(expression, str):
                     raise ValueError("Expression must be a string")
             except (json.JSONDecodeError, ValueError) as e:
-                logger.error("Invalid JSON or expression format", error=str(e))  # Логируем ошибку
+                logger.error("Invalid JSON or expression format", error=str(e))
                 self.send_response(400)
                 self.send_header("Content-type", "application/json")
                 self.end_headers()
@@ -49,9 +47,9 @@ class CalculatorHandler(BaseHTTPRequestHandler):
                 return
 
             try:
-                logger.info("Evaluating expression", expression=expression, float_mode=use_float)  # Логируем запрос
+                logger.info("Evaluating expression", expression=expression, float_mode=use_float)
                 result = subprocess.run(
-                    [calc_path, "--float"] if use_float else [calc_path],
+                    [calc_path, "--float"] if use_float else [calc_path],  # Передаем флаг --float
                     input=expression,
                     capture_output=True,
                     text=True,
@@ -59,19 +57,19 @@ class CalculatorHandler(BaseHTTPRequestHandler):
                 )
 
                 output = result.stdout.strip()
-                logger.info("Result of calculation", result=output)  # Логируем результат
+                logger.info("Result of calculation", result=output)
                 self.send_response(200)
                 self.send_header("Content-type", "application/json")
                 self.end_headers()
                 self.wfile.write(json.dumps({"result": output}).encode("utf-8"))
             except subprocess.CalledProcessError as e:
-                logger.error("Calculator error", error=e.stderr)  # Логируем ошибку калькулятора
+                logger.error("Calculator error", error=e.stderr)
                 self.send_response(500)
                 self.send_header("Content-type", "application/json")
                 self.end_headers()
                 self.wfile.write(json.dumps({"error": e.stderr}).encode("utf-8"))
         except Exception as e:
-            logger.critical("Unexpected error", error=str(e))  # Логируем критические ошибки
+            logger.critical("Unexpected error", error=str(e))
             self.send_response(501)
             self.send_header("Content-type", "application/json")
             self.end_headers()
