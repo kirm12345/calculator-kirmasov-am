@@ -81,6 +81,10 @@ run-integration-tests: $(BUILD_DIR)/app.exe
 
 run-server:
 	python3 serv.py
+	
+run-gui:
+	python3 gui.py
+	
 
 install-python-deps:
 	pip install structlog
